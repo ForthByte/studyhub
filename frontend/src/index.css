@@ -9,9 +9,9 @@
   --color-accent:         #7C3AED;
 
   --color-bg:             #F4F4FF;
-  --color-surface:        rgba(255, 255, 255, 0.75);
-  --color-surface-solid:  #FFFFFF;
-  --color-surface-raised: rgba(255, 255, 255, 0.9);
+  --color-surface:        rgba(235, 235, 255, 0.85);
+  --color-surface-solid:  #EEEEFF;
+  --color-surface-raised: rgba(245, 245, 255, 0.95);
   --color-border:         rgba(79, 70, 229, 0.12);
   --color-border-subtle:  rgba(79, 70, 229, 0.06);
 
@@ -489,4 +489,9 @@ body {
   border-color: rgba(79, 70, 229, 0.4);
   transform: scale(1.08);
   background: var(--color-surface-solid);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
 }
