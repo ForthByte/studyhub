@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-from app.routers import auth
+from app.routers import auth, groups
 
 #initialise the code FastAPI application instance with metadata for auto generated documentation
 app = FastAPI(title="Study Hub API")
 
 #mount the authentication routes under the main application
 app.include_router(auth.router)
+app.include_router(groups.router)
 
 
 @app.get("/api/v1/health")
