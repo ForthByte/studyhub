@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import ThemeToggle from '../components/ThemeToggle'
 
-// login page — allows existing users to authenticate with email and password.
-// on success the user is redirected to the dashboard.
 function LoginPage() {
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
@@ -17,7 +16,6 @@ function LoginPage() {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
-
     try {
       await login(email, password)
       navigate('/dashboard')
@@ -29,70 +27,93 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm p-8">
-
-        {/* header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Study Hub</h1>
-          <p className="mt-2 text-gray-500">Sign in to your account</p>
-        </div>
-
-        {/* error message */}
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* login form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        {/* register link */}
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-600 hover:underline font-medium">
-            Create one
-          </Link>
-        </p>
+    <>
+      {/* animated background orbs */}
+      <div className="orb-container">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
       </div>
-    </div>
+
+      {/* theme toggle */}
+      <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 100 }}>
+        <ThemeToggle />
+      </div>
+
+      <div className="auth-bg">
+        <div className="auth-card glass-card">
+
+          {/* header */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '8px' }}>
+              <span className="brand-gradient">Study Hub</span>
+            </h1>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
+              Sign in to your account
+            </p>
+          </div>
+
+          {/* error banner */}
+          {error && (
+            <div className="banner-error" style={{ marginBottom: '20px' }}>
+              {error}
+            </div>
+          )}
+
+          {/* form */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div>
+              <label className="label">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="label">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-primary"
+              style={{ marginTop: '4px' }}
+            >
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          {/* register link */}
+          <p style={{
+            marginTop: '24px',
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            color: 'var(--color-text-muted)',
+          }}>
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              style={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none' }}
+            >
+              Create one
+            </Link>
+          </p>
+        </div>
+      </div>
+    </>
   )
 }
 

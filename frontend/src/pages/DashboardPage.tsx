@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import ThemeToggle from '../components/ThemeToggle'
 
-// dashboard page — the main landing page for authenticated users.
-// currently a placeholder that confirms auth is working end to end.
+// dashboard page — main landing page for authenticated users.
+// placeholder that confirms auth is working end to end.
 // will be expanded with study groups, tasks, chat and flashcards.
 function DashboardPage() {
   const navigate = useNavigate()
@@ -13,34 +14,164 @@ function DashboardPage() {
     navigate('/login')
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const features = [
+    {
+      icon: '👥',
+      label: 'Study Groups',
+      desc: 'Create and join groups',
+      gradient: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+    },
+    {
+      icon: '✅',
+      label: 'Task Board',
+      desc: 'Kanban-style task tracking',
+      gradient: 'linear-gradient(135deg, #059669, #0891B2)',
+    },
+    {
+      icon: '💬',
+      label: 'Group Chat',
+      desc: 'Real-time messaging',
+      gradient: 'linear-gradient(135deg, #2563EB, #4F46E5)',
+    },
+    {
+      icon: '🃏',
+      label: 'Flashcards',
+      desc: 'Spaced repetition study',
+      gradient: 'linear-gradient(135deg, #7C3AED, #DB2777)',
+    },
+    {
+      icon: '📝',
+      label: 'Shared Notes',
+      desc: 'Collaborate on notes',
+      gradient: 'linear-gradient(135deg, #D97706, #DC2626)',
+    },
+    {
+      icon: '⏳',
+      label: 'Exam Countdown',
+      desc: 'Track upcoming exams',
+      gradient: 'linear-gradient(135deg, #0891B2, #059669)',
+    },
+  ]
 
-      {/* top navigation bar */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-indigo-600">Study Hub</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            Signed in as <span className="font-medium text-gray-900">{user?.username}</span>
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', position: 'relative' }}>
+
+      {/* animated background orbs */}
+      <div className="orb-container">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+      </div>
+
+      {/* navigation */}
+      <nav className="nav" style={{ position: 'relative', zIndex: 50 }}>
+        <span style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+          <span className="brand-gradient">Study Hub</span>
+        </span>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+            Signed in as{' '}
+            <span className="mono" style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>
+              {user?.username}
+            </span>
           </span>
-          <button
-            onClick={handleLogout}
-            className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-          >
+          <ThemeToggle />
+          <button onClick={handleLogout} className="btn-ghost">
             Sign out
           </button>
         </div>
       </nav>
 
       {/* main content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.username}!
+      <main style={{
+        maxWidth: '960px',
+        margin: '0 auto',
+        padding: '40px 24px',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+
+        {/* hero section */}
+        <div className="hero-gradient" style={{ marginBottom: '24px' }}>
+          <div style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-primary)',
+            marginBottom: '10px',
+          }}>
+            Dashboard
+          </div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '8px' }}>
+            Welcome back, {user?.username} 👋
           </h2>
-          <p className="text-gray-500">
-            Study groups, tasks, chat and flashcards are coming soon.
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>
+            Everything you need to study smarter with your group — all in one place.
           </p>
+        </div>
+
+        {/* section label */}
+        <div style={{
+          fontSize: '0.8125rem',
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          marginBottom: '14px',
+        }}>
+          Features
+        </div>
+
+        {/* feature grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: '16px',
+        }}>
+          {features.map((feature) => (
+            <div key={feature.label} className="feature-card">
+              {/* icon bubble with gradient */}
+              <div
+                className="icon-bubble"
+                style={{ background: feature.gradient }}
+              >
+                {feature.icon}
+              </div>
+
+              <div style={{
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                color: 'var(--color-text-primary)',
+                marginBottom: '4px',
+              }}>
+                {feature.label}
+              </div>
+
+              <div style={{
+                fontSize: '0.8125rem',
+                color: 'var(--color-text-secondary)',
+                marginBottom: '14px',
+              }}>
+                {feature.desc}
+              </div>
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: 'var(--color-primary)',
+                background: 'rgba(79, 70, 229, 0.08)',
+                padding: '3px 8px',
+                borderRadius: '999px',
+              }}>
+                Coming soon
+              </div>
+            </div>
+          ))}
         </div>
       </main>
     </div>
