@@ -14,6 +14,11 @@ class User(Base):
     :param username: unique and indexed display name chosen by the user.
     :param hashed_password: secure bcrypt hash string of the user's password.
     :param created_at: timestamp indicating when the user account was created, defaulting to the server's local current time.
+    :param messages: chat messages authored by this user.
+    :param sent_requests: friend requests sent by this user.
+    :param received_requests: friend requests received by this user.
+    :param sent_dms: direct messages sent by this user.
+    :param received_dms: direct messages received by this user.
     """
     __tablename__ = 'users'
 
@@ -32,3 +37,11 @@ class User(Base):
 
     # relationships
     messages = relationship("Message", back_populates="author")
+
+    # friendship relationships
+    sent_requests = relationship("Friendship", foreign_keys="Friendship.requester_id", back_populates="requester")
+    received_requests = relationship("Friendship", foreign_keys="Friendship.addressee_id", back_populates="addressee")
+
+    # direct message relationships
+    sent_dms = relationship("DirectMessage", foreign_keys="DirectMessage.sender_id", back_populates="sender")
+    received_dms = relationship("DirectMessage", foreign_keys="DirectMessage.recipient_id", back_populates="recipient")

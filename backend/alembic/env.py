@@ -12,6 +12,8 @@ from app.models.user import User
 from app.models.group import Group, GroupMember
 from app.models.channel import Channel
 from app.models.message import Message
+from app.models.friendship import Friendship
+from app.models.direct_message import DirectMessage
 
 load_dotenv()
 
