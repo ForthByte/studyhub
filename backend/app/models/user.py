@@ -3,6 +3,7 @@ from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
+from sqlalchemy.orm import relationship
 
 class User(Base):
     """
@@ -26,5 +27,8 @@ class User(Base):
     #secure authenticated payload
     hashed_password = Column(String, nullable=False)
 
-    #audit timestamp tracking account creation
+    # audit timestamp tracking account creation
     created_at = Column(DateTime(timezone=True), default=func.now())
+
+    # relationships
+    messages = relationship("Message", back_populates="author")

@@ -30,9 +30,9 @@ class Group(Base):
     is_private = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
-
     owner = relationship("User")
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
+    channels = relationship("Channel", back_populates="group", cascade="all, delete-orphan")
 
 
 class GroupMember(Base):

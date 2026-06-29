@@ -9,7 +9,9 @@ from alembic import context
 
 from app.database import Base
 from app.models.user import User
-from app.models.group import Group,GroupMember
+from app.models.group import Group, GroupMember
+from app.models.channel import Channel
+from app.models.message import Message
 
 load_dotenv()
 
