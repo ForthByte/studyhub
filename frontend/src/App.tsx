@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import GroupShellPage from './pages/GroupShellPage'
 import GroupSettingsPage from './pages/GroupSettingsPage'
+import DMPage from './pages/DMPage'
 
 // root application component — sets up the router and triggers session
 // rehydration on startup so returning users are automatically logged back in.
@@ -35,6 +36,9 @@ function App() {
         } />
         <Route path="/groups/:id/settings" element={
           <ProtectedRoute><GroupSettingsPage /></ProtectedRoute>
+        } />
+        <Route path="/dm/:userId" element={
+          <ProtectedRoute><DMPage /></ProtectedRoute>
         } />
 
         {/* catch-all */}
