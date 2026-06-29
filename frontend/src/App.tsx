@@ -5,6 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import GroupShellPage from './pages/GroupShellPage'
+import GroupSettingsPage from './pages/GroupSettingsPage'
 
 // root application component — sets up the router and triggers session
 // rehydration on startup so returning users are automatically logged back in.
@@ -12,8 +14,7 @@ function App() {
   const rehydrate = useAuthStore((state) => state.rehydrate)
 
   // attempt to restore the user session from the httpOnly refresh token
-  // cookie as soon as the app mounts. isLoading stays true until this completes
-  // so ProtectedRoute doesn't flash the login page for authenticated users.
+  // cookie as soon as the app mounts.
   useEffect(() => {
     rehydrate()
   }, [rehydrate])
@@ -21,21 +22,22 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* public routes — accessible without authentication */}
+        {/* public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* protected routes — redirect to /login if not authenticated */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* protected routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><DashboardPage /></ProtectedRoute>
+        } />
+        <Route path="/groups/:id" element={
+          <ProtectedRoute><GroupShellPage /></ProtectedRoute>
+        } />
+        <Route path="/groups/:id/settings" element={
+          <ProtectedRoute><GroupSettingsPage /></ProtectedRoute>
+        } />
 
-        {/* catch-all — redirect any unknown route to dashboard */}
+        {/* catch-all */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
