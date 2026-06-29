@@ -67,8 +67,9 @@ class GroupMemberDetailResponse(BaseModel):
     role: GroupRole
     joined_at: datetime
 
-class GroupWithRoleResponse(BaseModel):
+class GroupWithRoleResponse(GroupResponse):
     """
-    response model for groups the current user belongs to
+    response model for groups the current user belongs to,
+    includes the current user's role within the group.
     """
     my_role: GroupRole
