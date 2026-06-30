@@ -8,7 +8,8 @@ from app.models.user import User
 
 def create_group(db: Session, owner_id: UUID, name: str, description: str | None, is_private: bool) -> Group:
     """
-    Create a new study group and assign the creator as the group owner
+    Create a new study group, assign the creator as the group owner,
+    and automatically create a default #general channel.
     :param db: active database session
     :param owner_id: ID of the user creating the study group
     :param name: name of the study group
@@ -16,6 +17,8 @@ def create_group(db: Session, owner_id: UUID, name: str, description: str | None
     :param is_private: whether the group is invite only or not
     :return: the newly created group object
     """
+    from app.models.channel import Channel
+
     group = Group(
         name=name,
         description=description,
@@ -26,13 +29,23 @@ def create_group(db: Session, owner_id: UUID, name: str, description: str | None
     db.add(group)
     db.flush()
 
+    # assign the creator as owner
     membership = GroupMember(
         group_id=group.id,
         user_id=owner_id,
         role=GroupRole.owner
     )
-
     db.add(membership)
+
+    # create a default #general channel for the group
+    general_channel = Channel(
+        group_id=group.id,
+        name="general",
+        description="General discussion for the group",
+        is_default=True,
+    )
+    db.add(general_channel)
+
     db.commit()
     db.refresh(group)
 

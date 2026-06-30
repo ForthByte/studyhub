@@ -2,7 +2,12 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, groups
+from app.routers import auth
+from app.routers import groups
+from app.routers import channels
+from app.routers import chat
+from app.routers import friends
+from app.routers import dm
 
 load_dotenv()
 
@@ -19,9 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# mount the authentication routes under the main application
+# mount routers
 app.include_router(auth.router)
 app.include_router(groups.router)
+app.include_router(channels.router)
+app.include_router(chat.router)
+app.include_router(friends.router)
+app.include_router(dm.router)
 
 
 @app.get("/api/v1/health")
