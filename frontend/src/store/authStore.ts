@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../api/axios'
+import { usePresenceStore } from './presenceStore'
 
 // shape of the authenticated user object returned from /auth/me
 interface User {
@@ -53,7 +54,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   // clear all auth state — called on logout or when refresh token fails
-  logout: () => set({ user: null, accessToken: null, isLoading: false }),
+  logout: () => {
+    // stop presence heartbeat on logout
+    usePresenceStore.getState().stopHeartbeat()
+    set({ user: null, accessToken: null, isLoading: false })
+  },
 
   // on app startup, attempt to restore the session using the httpOnly cookie.
   // if the refresh token is still valid a new access token is returned and the
