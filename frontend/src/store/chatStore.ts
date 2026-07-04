@@ -2,6 +2,10 @@ import { create } from 'zustand'
 import api from '../api/axios'
 import { useAuthStore } from './authStore'
 
+// store socket outside Zustand — WebSocket objects don't serialize well in state
+// and React strict mode can cause the socket reference to become stale
+let channelSocket: WebSocket | null = null
+
 // shape of a channel
 export interface Channel {
   id: string
@@ -32,21 +36,11 @@ export interface TypingUser {
 }
 
 interface ChatState {
-  // channels
   channels: Channel[]
   activeChannel: Channel | null
-
-  // messages
   messages: Message[]
-
-  // typing indicators
   typingUsers: TypingUser[]
-
-  // online presence
   onlineCount: number
-
-  // websocket
-  socket: WebSocket | null
   isConnected: boolean
   isConnecting: boolean
 
@@ -68,7 +62,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   typingUsers: [],
   onlineCount: 0,
-  socket: null,
   isConnected: false,
   isConnecting: false,
 
@@ -91,8 +84,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   // set the active channel and connect to it via WebSocket
   setActiveChannel: (channel) => {
     const current = get().activeChannel
-
-    // disconnect from the previous channel first
     if (current?.id !== channel.id) {
       get().disconnectFromChannel()
       set({ activeChannel: channel, messages: [], typingUsers: [] })
@@ -105,34 +96,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const token = useAuthStore.getState().accessToken
     if (!token) return
 
-    set({ isConnecting: true })
+    // close any existing socket
+    if (channelSocket) {
+      channelSocket.close()
+      channelSocket = null
+    }
+
+    set({ isConnecting: true, isConnected: false })
 
     const wsUrl = `${import.meta.env.VITE_WS_URL}/channel/${channelId}?token=${token}`
-    const socket = new WebSocket(wsUrl)
+    channelSocket = new WebSocket(wsUrl)
 
-    socket.onopen = () => {
+    channelSocket.onopen = () => {
       set({ isConnected: true, isConnecting: false })
     }
 
-    socket.onmessage = (event) => {
+    channelSocket.onmessage = (event) => {
       const data = JSON.parse(event.data)
       const { type, payload } = data
 
       if (type === 'history') {
-        // load message history sent on connection
         set({ messages: payload.messages })
       } else if (type === 'message') {
-        // append new message to the list
         set((state) => ({ messages: [...state.messages, payload] }))
       } else if (type === 'typing') {
-        // add user to typing indicators if not already there
         set((state) => {
           const already = state.typingUsers.find((u) => u.user_id === payload.user_id)
           if (already) return state
           return { typingUsers: [...state.typingUsers, payload] }
         })
       } else if (type === 'stop_typing') {
-        // remove user from typing indicators
         set((state) => ({
           typingUsers: state.typingUsers.filter((u) => u.user_id !== payload.user_id),
         }))
@@ -141,25 +134,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
     }
 
-    socket.onclose = () => {
-      set({ isConnected: false, isConnecting: false, socket: null })
-    }
-
-    socket.onerror = () => {
+    channelSocket.onclose = () => {
+      channelSocket = null
       set({ isConnected: false, isConnecting: false })
     }
 
-    set({ socket })
+    channelSocket.onerror = () => {
+      set({ isConnected: false, isConnecting: false })
+    }
   },
 
   // close the WebSocket connection and clear state
   disconnectFromChannel: () => {
-    const { socket } = get()
-    if (socket) {
-      socket.close()
+    if (channelSocket) {
+      channelSocket.close()
+      channelSocket = null
     }
     set({
-      socket: null,
       isConnected: false,
       isConnecting: false,
       messages: [],
@@ -170,26 +161,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   // send a chat message over the WebSocket
   sendMessage: (content) => {
-    const { socket, isConnected } = get()
-    if (!socket || !isConnected) return
-
-    socket.send(JSON.stringify({ type: 'message', content }))
+    if (!channelSocket || channelSocket.readyState !== WebSocket.OPEN) return
+    channelSocket.send(JSON.stringify({ type: 'message', content }))
   },
 
-  // send a typing indicator
+  // send typing indicator
   sendTyping: () => {
-    const { socket, isConnected } = get()
-    if (!socket || !isConnected) return
-
-    socket.send(JSON.stringify({ type: 'typing' }))
+    if (!channelSocket || channelSocket.readyState !== WebSocket.OPEN) return
+    channelSocket.send(JSON.stringify({ type: 'typing' }))
   },
 
-  // send a stop typing indicator
+  // send stop typing indicator
   sendStopTyping: () => {
-    const { socket, isConnected } = get()
-    if (!socket || !isConnected) return
-
-    socket.send(JSON.stringify({ type: 'stop_typing' }))
+    if (!channelSocket || channelSocket.readyState !== WebSocket.OPEN) return
+    channelSocket.send(JSON.stringify({ type: 'stop_typing' }))
   },
 
   // create a new channel in a group

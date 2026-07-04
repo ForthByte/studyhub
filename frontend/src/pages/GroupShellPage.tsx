@@ -20,14 +20,18 @@ function GroupShellPage() {
   } = useChatStore()
 
   useEffect(() => {
-    if (id && id !== 'undefined') {
-      fetchGroup(id)
-      fetchGroups()
-      fetchChannels(id)
-    }
+    if (!id || id === 'undefined') return
 
-    // disconnect from channel when leaving the group
+    fetchGroup(id)
+    fetchGroups()
+
+    // small delay to avoid React strict mode double-invoke closing the socket
+    const timeout = setTimeout(() => {
+      fetchChannels(id)
+    }, 50)
+
     return () => {
+      clearTimeout(timeout)
       disconnectFromChannel()
     }
   }, [id])
