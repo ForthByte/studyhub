@@ -9,8 +9,9 @@ import JoinGroupModal from '../components/JoinGroupModal'
 import DashboardView from '../components/dashboard/DashboardView'
 import GroupsView from '../components/dashboard/GroupsView'
 import FriendsView from '../components/dashboard/FriendsView'
+import DMsView from '../components/dashboard/DMsView'
 
-type NavId = 'dashboard' | 'groups' | 'friends' | 'tasks' | 'chat' | 'flashcards' | 'notes' | 'exams'
+type NavId = 'dashboard' | 'groups' | 'friends' | 'dms' | 'tasks' | 'flashcards' | 'notes' | 'exams'
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -45,8 +46,8 @@ function DashboardPage() {
     { id: 'dashboard', icon: '⚡', label: 'Dashboard' },
     { id: 'groups', icon: '👥', label: 'Study Groups' },
     { id: 'friends', icon: '🤝', label: 'Friends' },
+    { id: 'dms', icon: '💬', label: 'Direct Messages' },
     { id: 'tasks', icon: '✅', label: 'Task Board' },
-    { id: 'chat', icon: '💬', label: 'Group Chat' },
     { id: 'flashcards', icon: '🃏', label: 'Flashcards' },
     { id: 'notes', icon: '📝', label: 'Shared Notes' },
     { id: 'exams', icon: '⏳', label: 'Exam Countdown' },
@@ -78,8 +79,8 @@ function DashboardPage() {
       case 'dashboard': return <DashboardView username={user?.username ?? ''} />
       case 'groups': return <GroupsView onCreateGroup={() => setShowCreateModal(true)} onJoinGroup={() => setShowJoinModal(true)} />
       case 'friends': return <FriendsView />
+      case 'dms': return <DMsView />
       case 'tasks': return <ComingSoonView icon="✅" label="Task Board" />
-      case 'chat': return <ComingSoonView icon="💬" label="Group Chat" />
       case 'flashcards': return <ComingSoonView icon="🃏" label="Flashcards" />
       case 'notes': return <ComingSoonView icon="📝" label="Shared Notes" />
       case 'exams': return <ComingSoonView icon="⏳" label="Exam Countdown" />

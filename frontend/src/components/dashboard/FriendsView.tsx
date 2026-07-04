@@ -1,10 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFriendStore } from '../../store/friendStore'
+import { usePresenceStore } from '../../store/presenceStore'
 
-// friends view — shows the friends list, incoming requests and add friend input.
-// extracted into its own component to prevent input focus loss caused by
-// inner component recreation on every parent render.
 function FriendsView() {
   const navigate = useNavigate()
   const {
@@ -15,11 +13,21 @@ function FriendsView() {
     declineRequest,
     removeFriend,
   } = useFriendStore()
+  const { fetchStatus, isOnline } = usePresenceStore()
 
   const [friendInput, setFriendInput] = useState('')
   const [friendError, setFriendError] = useState<string | null>(null)
   const [friendSuccess, setFriendSuccess] = useState<string | null>(null)
   const [isSendingRequest, setIsSendingRequest] = useState(false)
+
+  // fetch online status for all friends and poll every 30 seconds
+  useEffect(() => {
+    if (friends.length === 0) return
+    const ids = friends.map((f) => f.user_id)
+    fetchStatus(ids)
+    const interval = setInterval(() => fetchStatus(ids), 30000)
+    return () => clearInterval(interval)
+  }, [friends])
 
   const handleSendFriendRequest = async () => {
     if (!friendInput.trim()) return
@@ -31,9 +39,8 @@ function FriendsView() {
       setFriendSuccess(`Friend request sent to ${friendInput.trim()}!`)
       setFriendInput('')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to send friend request.'
       const axiosError = err as { response?: { data?: { detail?: string } } }
-      setFriendError(axiosError.response?.data?.detail ?? message)
+      setFriendError(axiosError.response?.data?.detail ?? 'Failed to send friend request.')
     } finally {
       setIsSendingRequest(false)
     }
@@ -205,22 +212,34 @@ function FriendsView() {
                 background: 'var(--color-surface-raised)',
                 border: '1px solid var(--color-border)',
               }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #059669, #0891B2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.875rem', fontWeight: 700, color: 'white', flexShrink: 0,
-                }}>
-                  {friend.username[0].toUpperCase()}
+                {/* avatar with online indicator */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #059669, #0891B2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.875rem', fontWeight: 700, color: 'white',
+                  }}>
+                    {friend.username[0].toUpperCase()}
+                  </div>
+                  {/* online dot */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, right: 0,
+                    width: '10px', height: '10px', borderRadius: '50%',
+                    background: isOnline(friend.user_id) ? '#059669' : 'var(--color-text-muted)',
+                    border: '2px solid var(--color-surface-raised)',
+                  }} />
                 </div>
+
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                     {friend.username}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                    {friend.email}
+                  <div style={{ fontSize: '0.8rem', color: isOnline(friend.user_id) ? '#059669' : 'var(--color-text-muted)' }}>
+                    {isOnline(friend.user_id) ? 'Online' : 'Offline'}
                   </div>
                 </div>
+
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => navigate(`/dm/${friend.user_id}`)}

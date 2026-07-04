@@ -8,6 +8,7 @@ from app.routers import channels
 from app.routers import chat
 from app.routers import friends
 from app.routers import dm
+from app.routers import presence
 
 load_dotenv()
 
@@ -31,6 +32,8 @@ app.include_router(channels.router)
 app.include_router(chat.router)
 app.include_router(friends.router)
 app.include_router(dm.router)
+# in the routers section:
+app.include_router(presence.router)
 
 
 @app.get("/api/v1/health")

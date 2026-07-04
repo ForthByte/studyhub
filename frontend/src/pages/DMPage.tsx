@@ -3,30 +3,36 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useFriendStore } from '../store/friendStore'
 import { useDMStore } from '../store/dmStore'
+import { usePresenceStore } from '../store/presenceStore'
 import ThemeToggle from '../components/ThemeToggle'
 import DMPanel from '../components/dm/DMPanel'
 
-// DM page — renders a direct message conversation with another user.
-// connects to the DM WebSocket on mount and disconnects on unmount.
 function DMPage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
   const { friends, fetchFriends } = useFriendStore()
   const { connectToDM, disconnectFromDM } = useDMStore()
+  const { fetchStatus, isOnline } = usePresenceStore()
 
   useEffect(() => {
     fetchFriends()
   }, [])
 
+  // fetch online status for friends and poll every 30 seconds
+  useEffect(() => {
+    if (friends.length === 0) return
+    const ids = friends.map((f) => f.user_id)
+    fetchStatus(ids)
+    const interval = setInterval(() => fetchStatus(ids), 30000)
+    return () => clearInterval(interval)
+  }, [friends])
+
   useEffect(() => {
     if (!userId) return
-
-    // small delay to avoid React strict mode double-invoke closing the socket
     const timeout = setTimeout(() => {
       connectToDM(userId)
     }, 50)
-
     return () => {
       clearTimeout(timeout)
       disconnectFromDM()
@@ -38,7 +44,6 @@ function DMPage() {
     navigate('/login')
   }
 
-  // find the other user's details from the friends list
   const otherUser = friends.find((f) => f.user_id === userId)
   const otherUsername = otherUser?.username ?? 'Unknown'
 
@@ -88,65 +93,82 @@ function DMPage() {
         </button>
 
         {/* dm header */}
-        <div style={{ padding: '8px 12px', marginBottom: '24px' }}>
+        <div style={{ padding: '8px 12px', marginBottom: '8px' }}>
           <p style={{
             fontSize: '0.7rem', fontWeight: 700,
             letterSpacing: '0.08em', textTransform: 'uppercase',
-            color: 'var(--color-text-muted)', marginBottom: '8px',
+            color: 'var(--color-text-muted)',
           }}>
             Direct Messages
           </p>
+        </div>
 
-          {/* friends list in sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {friends.map((friend) => {
-              const isActive = friend.user_id === userId
-              return (
-                <button
-                  key={friend.user_id}
-                  onClick={() => navigate(`/dm/${friend.user_id}`)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '8px 12px', borderRadius: '8px', border: 'none',
-                    cursor: 'pointer', textAlign: 'left',
-                    fontFamily: 'var(--font-sans)',
-                    transition: 'all 150ms',
-                    background: isActive
-                      ? 'linear-gradient(135deg, rgba(79,70,229,0.15), rgba(124,58,237,0.1))'
-                      : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = 'var(--color-surface-raised)'
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  {/* avatar */}
+        {/* friends list */}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {friends.map((friend) => {
+            const isActive = friend.user_id === userId
+            const online = isOnline(friend.user_id)
+            return (
+              <button
+                key={friend.user_id}
+                onClick={() => navigate(`/dm/${friend.user_id}`)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '8px 12px', borderRadius: '8px', border: 'none',
+                  cursor: 'pointer', textAlign: 'left',
+                  fontFamily: 'var(--font-sans)', transition: 'all 150ms',
+                  background: isActive
+                    ? 'linear-gradient(135deg, rgba(79,70,229,0.15), rgba(124,58,237,0.1))'
+                    : 'transparent',
+                  borderLeft: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'var(--color-surface-raised)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                {/* avatar with online dot */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '50%',
                     background: 'linear-gradient(135deg, #059669, #0891B2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.8rem', fontWeight: 700, color: 'white', flexShrink: 0,
+                    fontSize: '0.8rem', fontWeight: 700, color: 'white',
                   }}>
                     {friend.username[0].toUpperCase()}
                   </div>
+                  {/* online indicator */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, right: 0,
+                    width: '9px', height: '9px', borderRadius: '50%',
+                    background: online ? '#059669' : 'var(--color-text-muted)',
+                    border: '2px solid var(--color-surface)',
+                  }} />
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{
-                    fontSize: '0.9rem', fontWeight: isActive ? 600 : 400,
+                    fontSize: '0.9rem',
+                    fontWeight: isActive ? 600 : 400,
                     color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    display: 'block',
                   }}>
                     {friend.username}
                   </span>
-                </button>
-              )
-            })}
-          </div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: online ? '#059669' : 'var(--color-text-muted)',
+                  }}>
+                    {online ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
         </div>
-
-        {/* spacer */}
-        <div style={{ flex: 1 }} />
 
         {/* user section */}
         <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -156,20 +178,29 @@ function DMPage() {
             background: 'var(--color-surface-raised)',
             border: '1px solid var(--color-border)',
           }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.875rem', fontWeight: 700, color: 'white', flexShrink: 0,
-            }}>
-              {user?.username?.[0]?.toUpperCase()}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.875rem', fontWeight: 700, color: 'white',
+              }}>
+                {user?.username?.[0]?.toUpperCase()}
+              </div>
+              {/* always online for current user */}
+              <div style={{
+                position: 'absolute', bottom: 0, right: 0,
+                width: '9px', height: '9px', borderRadius: '50%',
+                background: '#059669',
+                border: '2px solid var(--color-surface-raised)',
+              }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.username}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.email}
+              <div style={{ fontSize: '0.75rem', color: '#059669' }}>
+                Online
               </div>
             </div>
           </div>
@@ -209,10 +240,7 @@ function DMPage() {
         display: 'flex', flexDirection: 'column',
       }}>
         {userId ? (
-          <DMPanel
-            otherUserId={userId}
-            otherUsername={otherUsername}
-          />
+          <DMPanel otherUserId={userId} otherUsername={otherUsername} />
         ) : (
           <div style={{
             flex: 1, display: 'flex', flexDirection: 'column',
