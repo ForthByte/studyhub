@@ -47,7 +47,11 @@ api.interceptors.response.use(
     const original = error.config
 
     // skip retry if this was the refresh endpoint itself failing
-    if (original.url?.includes('/auth/refresh')) {
+    if (
+      original.url?.includes('/auth/refresh') ||
+      original.url?.includes('/auth/login') ||
+      original.url?.includes('/auth/register')
+    ) {
       return Promise.reject(error)
     }
 

@@ -34,7 +34,7 @@ def heartbeat(
     """
     r = get_redis()
     # set key with 60 second TTL — if no heartbeat in 60s, user is offline
-    r.setex(f"presence:{current_user.id}", 60, "online")
+    r.setex(f"presence:{str(current_user.id)}", 60, "online")
     return None
 
 

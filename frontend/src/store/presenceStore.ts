@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../api/axios'
+import { useAuthStore } from './authStore'
 
 interface PresenceState {
   onlineUsers: Record<string, boolean>
@@ -18,13 +19,16 @@ export const usePresenceStore = create<PresenceState>((set, get) => ({
 
   // start sending heartbeats every 30 seconds
   startHeartbeat: () => {
-    // send immediately on start
-    api.post('/presence/heartbeat').catch(() => {})
-
-    const interval = setInterval(() => {
+    const sendHeartbeat = () => {
+      // only send heartbeat if user is authenticated
+      const token = useAuthStore.getState().accessToken
+      if (!token) return
       api.post('/presence/heartbeat').catch(() => {})
-    }, 30000)
+    }
 
+    sendHeartbeat()
+
+    const interval = setInterval(sendHeartbeat, 30000)
     set({ heartbeatInterval: interval })
   },
 

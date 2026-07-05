@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 import GroupShellPage from './pages/GroupShellPage'
 import GroupSettingsPage from './pages/GroupSettingsPage'
 import DMPage from './pages/DMPage'
+import { usePresenceStore } from './store/presenceStore.ts'
 
 // root application component — sets up the router and triggers session
 // rehydration on startup so returning users are automatically logged back in.
@@ -17,7 +18,9 @@ function App() {
   // attempt to restore the user session from the httpOnly refresh token
   // cookie as soon as the app mounts.
   useEffect(() => {
-    rehydrate()
+    rehydrate().then(() => {
+      usePresenceStore.getState().startHeartbeat()
+    })
   }, [rehydrate])
 
   return (
