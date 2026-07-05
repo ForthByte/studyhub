@@ -14,6 +14,7 @@ from app.models.channel import Channel
 from app.models.message import Message
 from app.models.friendship import Friendship
 from app.models.direct_message import DirectMessage
+from app.models.exam import Exam
 
 load_dotenv()
 

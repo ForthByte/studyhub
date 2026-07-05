@@ -19,6 +19,7 @@ class User(Base):
     :param received_requests: friend requests received by this user.
     :param sent_dms: direct messages sent by this user.
     :param received_dms: direct messages received by this user.
+    :param exams: upcoming exams added by this user.
     """
     __tablename__ = 'users'
 
@@ -45,3 +46,6 @@ class User(Base):
     # direct message relationships
     sent_dms = relationship("DirectMessage", foreign_keys="DirectMessage.sender_id", back_populates="sender")
     received_dms = relationship("DirectMessage", foreign_keys="DirectMessage.recipient_id", back_populates="recipient")
+
+    # exam relationship
+    exams = relationship("Exam", back_populates="owner", cascade="all, delete-orphan")
