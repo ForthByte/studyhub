@@ -10,6 +10,7 @@ import DashboardView from '../components/dashboard/DashboardView'
 import GroupsView from '../components/dashboard/GroupsView'
 import FriendsView from '../components/dashboard/FriendsView'
 import DMsView from '../components/dashboard/DMsView'
+import ExamCountdownView from '../components/dashboard/ExamCountdownView'
 
 type NavId = 'dashboard' | 'groups' | 'friends' | 'dms' | 'tasks' | 'flashcards' | 'notes' | 'exams'
 
@@ -80,10 +81,10 @@ function DashboardPage() {
       case 'groups': return <GroupsView onCreateGroup={() => setShowCreateModal(true)} onJoinGroup={() => setShowJoinModal(true)} />
       case 'friends': return <FriendsView />
       case 'dms': return <DMsView />
+      case 'exams': return <ExamCountdownView />
       case 'tasks': return <ComingSoonView icon="✅" label="Task Board" />
       case 'flashcards': return <ComingSoonView icon="🃏" label="Flashcards" />
       case 'notes': return <ComingSoonView icon="📝" label="Shared Notes" />
-      case 'exams': return <ComingSoonView icon="⏳" label="Exam Countdown" />
     }
   }
 
