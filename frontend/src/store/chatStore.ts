@@ -67,14 +67,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   // fetch all channels for a group and set the default channel as active
   fetchChannels: async (groupId) => {
+    // always reset when fetching new group channels
+    set({ activeChannel: null, messages: [], typingUsers: [], channels: [] })
     try {
       const { data } = await api.get(`/groups/${groupId}/channels`)
       set({ channels: data })
-
-      // auto-select the default channel if none is active
       const defaultChannel = data.find((c: Channel) => c.is_default) ?? data[0]
-      if (defaultChannel && !get().activeChannel) {
-        get().setActiveChannel(defaultChannel)
+      if (defaultChannel) {
+        // always set and connect to default channel
+        set({ activeChannel: defaultChannel, messages: [], typingUsers: [] })
+        get().connectToChannel(defaultChannel.id)
       }
     } catch {
       set({ channels: [] })

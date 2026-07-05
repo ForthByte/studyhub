@@ -3,29 +3,29 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useGroupStore } from '../store/groupStore'
 import { useChatStore } from '../store/chatStore'
+import { usePresenceStore } from '../store/presenceStore'
 import ThemeToggle from '../components/ThemeToggle'
 import ChatPanel from '../components/chat/ChatPanel'
+import MemberList from '../components/chat/MemberList'
 
 function GroupShellPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { activeGroup, groups, fetchGroup, fetchGroups } = useGroupStore()
+  const { activeGroup, groups, members, fetchGroup, fetchGroups, fetchMembers } = useGroupStore()
   const {
-    channels,
-    activeChannel,
-    fetchChannels,
-    setActiveChannel,
-    disconnectFromChannel,
+    channels, activeChannel,
+    fetchChannels, setActiveChannel, disconnectFromChannel,
   } = useChatStore()
+  const { fetchStatus } = usePresenceStore()
 
   useEffect(() => {
     if (!id || id === 'undefined') return
 
     fetchGroup(id)
     fetchGroups()
+    fetchMembers(id)
 
-    // small delay to avoid React strict mode double-invoke closing the socket
     const timeout = setTimeout(() => {
       fetchChannels(id)
     }, 50)
@@ -36,6 +36,28 @@ function GroupShellPage() {
     }
   }, [id])
 
+  // fetch presence status for group members and poll every 30 seconds
+  useEffect(() => {
+    if (!id) return
+
+    // fetch presence immediately if we have members
+    if (members.length > 0) {
+      const ids = members.map((m) => m.user_id)
+      fetchStatus(ids.map(String))
+    }
+
+    // poll both members and presence every 30 seconds
+    const interval = setInterval(() => {
+      fetchMembers(id)
+      if (members.length > 0) {
+        const ids = members.map((m) => m.user_id)
+        fetchStatus(ids.map(String))
+      }
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [members, id])
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -45,7 +67,7 @@ function GroupShellPage() {
   const userRole = currentGroup?.role ?? 'member'
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--color-bg)', position: 'relative' }}>
+    <div style={{ height: '100vh', display: 'flex', background: 'var(--color-bg)', overflow: 'hidden', position: 'relative' }}>
 
       {/* orbs */}
       <div className="orb-container">
@@ -56,10 +78,10 @@ function GroupShellPage() {
 
       {/* ── SIDEBAR ── */}
       <aside style={{
-        width: '260px', minHeight: '100vh',
+        width: '260px', height: '100vh',
         display: 'flex', flexDirection: 'column',
-        padding: '24px 16px', position: 'fixed',
-        left: 0, top: 0, bottom: 0, zIndex: 40,
+        padding: '24px 16px', flexShrink: 0,
+        zIndex: 40, position: 'relative',
         background: 'var(--color-surface)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
@@ -192,8 +214,7 @@ function GroupShellPage() {
                     display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '7px 12px', borderRadius: '8px', border: 'none',
                     cursor: 'pointer', fontSize: '0.9rem', textAlign: 'left',
-                    fontFamily: 'var(--font-sans)',
-                    transition: 'all 150ms',
+                    fontFamily: 'var(--font-sans)', transition: 'all 150ms',
                     background: isActive
                       ? 'linear-gradient(135deg, rgba(79,70,229,0.15), rgba(124,58,237,0.1))'
                       : 'transparent',
@@ -282,8 +303,7 @@ function GroupShellPage() {
               background: 'transparent',
               color: 'var(--color-text-secondary)',
               fontSize: '0.875rem', fontWeight: 500,
-              textDecoration: 'none',
-              transition: 'all 150ms',
+              textDecoration: 'none', transition: 'all 150ms',
               marginTop: '8px', marginBottom: '8px',
             }}
             onMouseEnter={(e) => {
@@ -326,6 +346,34 @@ function GroupShellPage() {
               </div>
             </div>
           </div>
+          {/* leave group — not available to owner */}
+          {userRole !== 'owner' && (
+            <button
+              onClick={async () => {
+                if (!id) return
+                await useGroupStore.getState().leaveGroup(id)
+                navigate('/dashboard')
+              }}
+              style={{
+                flex: 1, padding: '8px 12px', borderRadius: '10px',
+                border: '1px solid rgba(220,38,38,0.2)',
+                background: 'transparent',
+                color: 'var(--color-error)', fontSize: '0.875rem',
+                fontWeight: 500, fontFamily: 'var(--font-sans)', cursor: 'pointer',
+                transition: 'all 150ms',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(220,38,38,0.06)'
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.2)'
+              }}
+            >
+              Leave
+            </button>
+          )}
           <div style={{ display: 'flex', gap: '8px' }}>
             <ThemeToggle />
             <button
@@ -356,8 +404,7 @@ function GroupShellPage() {
 
       {/* ── MAIN CONTENT ── */}
       <main style={{
-        marginLeft: '260px', flex: 1,
-        position: 'relative', zIndex: 1,
+        flex: 1, position: 'relative', zIndex: 1,
         height: '100vh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
       }}>
@@ -379,6 +426,9 @@ function GroupShellPage() {
           </div>
         )}
       </main>
+
+      {/* ── RIGHT MEMBER LIST ── */}
+      <MemberList members={members} />
     </div>
   )
 }
