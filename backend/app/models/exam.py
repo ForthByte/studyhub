@@ -34,5 +34,3 @@ class Exam(Base):
     # relationships
     owner = relationship("User", back_populates="exams")
     group = relationship("Group", back_populates="exams")
-
-    exams = relationship("Exam", back_populates="group", cascade="all, delete-orphan")

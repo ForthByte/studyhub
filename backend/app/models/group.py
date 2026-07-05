@@ -34,6 +34,7 @@ class Group(Base):
     members = relationship("GroupMember", back_populates="group", cascade="all, delete-orphan")
     channels = relationship("Channel", back_populates="group", cascade="all, delete-orphan")
 
+    exams = relationship("Exam", back_populates="group")
 
 class GroupMember(Base):
     __tablename__ = "group_members"
