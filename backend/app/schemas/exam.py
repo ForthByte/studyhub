@@ -20,6 +20,7 @@ class ExamResponse(BaseModel):
     """
     id: UUID
     user_id: UUID
+    group_id: UUID | None
     name: str
     subject: str | None
     exam_date: datetime

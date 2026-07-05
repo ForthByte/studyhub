@@ -10,6 +10,7 @@ from app.routers import friends
 from app.routers import dm
 from app.routers import presence
 from app.routers import exams
+from app.routers import group_exams
 
 load_dotenv()
 
@@ -35,7 +36,7 @@ app.include_router(friends.router)
 app.include_router(dm.router)
 app.include_router(presence.router)
 app.include_router(exams.router)
-
+app.include_router(group_exams.router)
 
 @app.get("/api/v1/health")
 def health():
