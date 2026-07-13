@@ -1,19 +1,19 @@
 import { useGroupStore } from '../../store/groupStore'
 import { useFriendStore } from '../../store/friendStore'
+import { useExamStore } from '../../store/examStore'
 
 // dashboard view — personal overview with stats and coming soon features grid.
 // extracted into its own component to prevent recreation on every parent render.
 function DashboardView({ username }: { username: string }) {
   const { groups } = useGroupStore()
   const { friends } = useFriendStore()
+  const { exams } = useExamStore()
 
   const features = [
-    { icon: '💬', label: 'Real-time Chat', desc: 'Message your group instantly. No lag, no refresh — powered by WebSockets.', gradient: 'linear-gradient(135deg, #2563EB, #4F46E5)' },
     { icon: '✅', label: 'Task Board', desc: 'Kanban-style task tracking. Drag cards between To Do, In Progress and Done.', gradient: 'linear-gradient(135deg, #059669, #0891B2)' },
     { icon: '🃏', label: 'Flashcards', desc: 'Build decks and study with spaced repetition. SM-2 algorithm built in.', gradient: 'linear-gradient(135deg, #7C3AED, #DB2777)' },
     { icon: '📝', label: 'Shared Notes', desc: "Rich-text notes your whole group can edit. See who's typing in real time.", gradient: 'linear-gradient(135deg, #D97706, #DC2626)' },
     { icon: '🤖', label: 'AI Study Sets', desc: 'Generate flashcards and quizzes from your notes using AI. Study smarter.', gradient: 'linear-gradient(135deg, #4F46E5, #0891B2)' },
-    { icon: '⏳', label: 'Exam Countdown', desc: 'Add upcoming exams and watch the countdown. Colour coded by urgency.', gradient: 'linear-gradient(135deg, #0891B2, #059669)' },
   ]
 
   return (
@@ -38,7 +38,7 @@ function DashboardView({ username }: { username: string }) {
           { label: 'Study groups', value: groups.length, icon: '👥', color: '#4F46E5' },
           { label: 'Friends', value: friends.length, icon: '🤝', color: '#059669' },
           { label: 'Cards due today', value: 0, icon: '🃏', color: '#7C3AED' },
-          { label: 'Upcoming exams', value: 0, icon: '⏳', color: '#D97706' },
+          { label: 'Upcoming exams', value: exams.filter(e => new Date(e.exam_date) > new Date()).length, icon: '⏳', color: '#D97706' },
         ].map((stat) => (
           <div
             key={stat.label}

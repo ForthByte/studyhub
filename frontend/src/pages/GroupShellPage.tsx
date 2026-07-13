@@ -7,10 +7,13 @@ import { usePresenceStore } from '../store/presenceStore'
 import ThemeToggle from '../components/ThemeToggle'
 import ChatPanel from '../components/chat/ChatPanel'
 import MemberList from '../components/chat/MemberList'
+import { useState } from 'react'
+import GroupExamView from '../components/chat/GroupExamView'
 
 function GroupShellPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [activeView, setActiveView] = useState<'chat' | 'exams'>('chat')
   const { user, logout } = useAuthStore()
   const { activeGroup, groups, members, fetchGroup, fetchGroups, fetchMembers } = useGroupStore()
   const {
@@ -205,11 +208,14 @@ function GroupShellPage() {
           {/* channel list */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
             {channels.map((channel) => {
-              const isActive = activeChannel?.id === channel.id
+              const isActive = activeChannel?.id === channel.id && activeView === 'chat'
               return (
                 <button
                   key={channel.id}
-                  onClick={() => setActiveChannel(channel)}
+                  onClick={() => {
+                    setActiveChannel(channel)
+                    setActiveView('chat')
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '7px 12px', borderRadius: '8px', border: 'none',
@@ -267,28 +273,59 @@ function GroupShellPage() {
               { icon: '✅', label: 'Tasks' },
               { icon: '🃏', label: 'Flashcards' },
               { icon: '📁', label: 'Files' },
-              { icon: '⏳', label: 'Exam Countdown' },
-            ].map((item) => (
-              <div
-                key={item.label}
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '7px 12px', borderRadius: '8px',
+                    color: 'var(--color-text-muted)', fontSize: '0.875rem',
+                    opacity: 0.5,
+                  }}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                  <span style={{
+                    marginLeft: 'auto', fontSize: '0.65rem',
+                    background: 'var(--color-surface-raised)',
+                    padding: '1px 5px', borderRadius: '4px',
+                  }}>
+                    Soon
+                  </span>
+                </div>
+              ))}
+
+              {/* exam countdown — fully working */}
+              <button
+                onClick={() => setActiveView('exams')}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '7px 12px', borderRadius: '8px',
-                  color: 'var(--color-text-muted)', fontSize: '0.875rem',
-                  opacity: 0.5,
+                  padding: '7px 12px', borderRadius: '8px', border: 'none',
+                  cursor: 'pointer', fontSize: '0.875rem', textAlign: 'left',
+                  fontFamily: 'var(--font-sans)', transition: 'all 150ms', width: '100%',
+                  background: activeView === 'exams'
+                    ? 'linear-gradient(135deg, rgba(79,70,229,0.15), rgba(124,58,237,0.1))'
+                    : 'transparent',
+                  color: activeView === 'exams' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  fontWeight: activeView === 'exams' ? 600 : 400,
+                  borderLeft: activeView === 'exams' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (activeView !== 'exams') {
+                    e.currentTarget.style.background = 'var(--color-surface-raised)'
+                    e.currentTarget.style.color = 'var(--color-text-primary)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeView !== 'exams') {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--color-text-secondary)'
+                  }
                 }}
               >
-                <span>{item.icon}</span>
-                {item.label}
-                <span style={{
-                  marginLeft: 'auto', fontSize: '0.65rem',
-                  background: 'var(--color-surface-raised)',
-                  padding: '1px 5px', borderRadius: '4px',
-                }}>
-                  Soon
-                </span>
-              </div>
-            ))}
+                <span>⏳</span>
+                Exam Countdown
+              </button>
           </div>
         </div>
 
@@ -408,7 +445,9 @@ function GroupShellPage() {
         height: '100vh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
       }}>
-        {activeChannel ? (
+        {activeView === 'exams' ? (
+          <GroupExamView groupId={id!} userRole={userRole} />
+        ) : activeChannel ? (
           <ChatPanel />
         ) : (
           <div style={{
